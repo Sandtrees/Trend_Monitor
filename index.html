@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		body {
+		  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+		}
+
+		#chartdiv {
+		  width: 100%;
+		  height: 500px;
+		}
+	</style>
+	<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+	<script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+	<script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+</head>
+
+<body>
+
+<div id="chartdiv"></div>
+
+<script type="text/javascript">
+			/**
+		 * ---------------------------------------
+		 * This demo was created using amCharts 4.
+		 * 
+		 * For more information visit:
+		 * https://www.amcharts.com/
+		 * 
+		 * Documentation is available at:
+		 * https://www.amcharts.com/docs/v4/
+		 * ---------------------------------------
+		 */
+
+		// Themes begin
+		am4core.useTheme(am4themes_animated);
+		// Themes end
+
+		// Create chart instance
+		var chart = am4core.create("chartdiv", am4charts.XYChart);
+
+		// Add data
+		chart.data = [{
+			"date": "2021/05/11",
+			"value": 7
+		}, {
+			"date": "2021/05/12",
+			"value": 16
+		}, {
+			"date": "2021/05/13",
+			"value": 13
+		}, {
+			"date": "2021/05/14",
+			"value": 29
+		}, {
+			"date": "2021/05/15",
+			"value": 180
+		}, {
+			"date": "2021/05/16",
+			"value": 206
+		}, {
+			"date": "2021/05/17",
+			"value": 333
+		}, {
+			"date": "2021/05/18",
+			"value": 240,
+		  "strokeWidth": 1.25,
+		  "columnDash": "10,10",
+		  "fillOpacity": 0.25,
+		  "additional": "(預測數量)"
+		}];
+
+		// Populate data
+		for (var i = 0; i < (chart.data.length - 1); i++) {
+			chart.data[i].valueNext = chart.data[i + 1].value;
+		}
+		let title = chart.titles.create();
+		title.text = "疫情成長狀況";
+		title.fontSize = 25;
+		title.marginBottom = 30;
+
+		// Create axes
+		var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+		categoryAxis.dataFields.category = "date";
+		categoryAxis.renderer.grid.template.location = 0;
+		categoryAxis.renderer.minGridDistance = 10;
+
+		var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+		valueAxis.min = 0;
+		valueAxis.extraMax = 0.1;
+		valueAxis.extraMin = 0.1;
+		// Create series
+		var series = chart.series.push(new am4charts.ColumnSeries());
+		series.dataFields.valueY = "value";
+		series.dataFields.categoryX = "date";
+		series.fill = am4core.color("rgba(193, 220, 17, 0.9)");
+		series.stroke = am4core.color("rgba(193, 220, 17, 0.9)");
+		series.columns.template.width = am4core.percent(50);
+		series.columns.template.propertyFields.fillOpacity = "fillOpacity";
+		series.columns.template.propertyFields.stroke = "stroke";
+		series.columns.template.propertyFields.strokeWidth = "strokeWidth";
+		series.columns.template.propertyFields.strokeDasharray = "columnDash";
+
+		// Add series for showing variance arrows
+		var series2 = chart.series.push(new am4charts.ColumnSeries());
+		series2.dataFields.valueY = "valueNext";
+		series2.dataFields.openValueY = "value";
+		series2.dataFields.categoryX = "date";
+		series2.columns.template.width = 0.5;
+		series2.fill = am4core.color("#444");
+		series2.stroke = am4core.color("#444");
+
+		var labelBullet = series.bullets.push(new am4charts.LabelBullet());
+		labelBullet.label.verticalCenter = "bottom";
+		labelBullet.label.dy = -10;
+		labelBullet.label.text = "{values.valueY.workingValue.formatNumber('#.')}";
+		labelBullet.label.fill = am4core.color("rgba(193, 220, 17, 0.95)");
+		labelBullet.label.stroke = am4core.color("rgba(193, 220, 17, 0.95)");
+
+		// Add a triangle for arrow tip
+		var arrow = series2.bullets.push(new am4core.Triangle);
+		arrow.width = 7.5;
+		arrow.height = 7.5;
+		arrow.horizontalCenter = "middle";
+		arrow.verticalCenter = "top";
+		arrow.dy = -1;
+
+		// Set up a rotation adapter which would rotate the triangle if its a negative change
+		arrow.adapter.add("rotation", function(rotation, target) {
+			return getVariancePercent(target.dataItem) < 0 ? 180 : rotation;
+		});
+
+		// Set up a rotation adapter which adjusts Y position
+		arrow.adapter.add("dy", function(dy, target) {
+			return getVariancePercent(target.dataItem) < 0 ? 1 : dy;
+		});
+
+		// Add a label
+		var label = series2.bullets.push(new am4core.Label);
+		label.padding(10, 10, 10, 10);
+		label.text = "";
+		label.fill = am4core.color("#cd5e68");
+		label.strokeWidth = 0;
+		label.horizontalCenter = "middle";
+		label.verticalCenter = "bottom";
+		label.fontWeight = "bolder";
+
+		// Adapter for label text which calculates change in percent
+		label.adapter.add("textOutput", function(text, target) {
+			var percent = getVariancePercent(target.dataItem);
+			return percent ? percent + "%" : text;
+		});
+
+		// Adapter which shifts the label if it's below the variance column
+		label.adapter.add("verticalCenter", function(center, target) {
+			return getVariancePercent(target.dataItem) < 0 ? "top" : center;
+		});
+
+		// Adapter which changes color of label to red
+		label.adapter.add("fill", function(fill, target) {
+			return getVariancePercent(target.dataItem) < 0 ? am4core.color("#32a197") : fill;
+		});
+
+		function getVariancePercent(dataItem) {
+			if (dataItem) {
+				var value = dataItem.valueY;
+				var openValue = dataItem.openValueY;
+				var change = value - openValue;
+				return Math.round(change / openValue * 100);
+			}
+			return 0;
+		}
+</script>
+</body>
+</html>
