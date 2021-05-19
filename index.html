@@ -9,51 +9,7 @@
 
 		#chartdiv {
 		  width: 100%;
-		  height: 500px;
-		}
-	</style>
-	<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-	<script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
-	<script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
-</head>
-
-<body>
-
-<div id="chartdiv"></div>
-
-<script type="text/javascript">
-			/**
-		 * ---------------------------------------
-		 * This demo was created using amCharts 4.
-		 * 
-		 * For more information visit:
-		 * https://www.amcharts.com/
-		 * 
-		 * Documentation is available at:
-		 * https://www.amcharts.com/docs/v4/
-		 * ---------------------------------------
-		 */
-
-		// Themes begin
-		am4core.useTheme(am4themes_animated);
-		// Themes end
-
-		// Create chart instance
-		var chart = am4core.create("chartdiv", am4charts.XYChart);
-
-		// Add data
-		chart.data = [{<!DOCTYPE html>
-<html>
-<head>
-	<title></title>
-	<style type="text/css">
-		body {
-		  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-		}
-
-		#chartdiv {
-		  width: 100%;
-		  height: 500px;
+		  height: 95vh;
 		}
 	</style>
 	<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
@@ -227,7 +183,7 @@
 
 		chart.responsive.enabled = true;
 		chart.responsive.useDefault = false
-
+		chart.cursor = new am4charts.XYCursor();
 		chart.responsive.rules.push({
 		  relevant: function(target) {
 		    if (target.pixelWidth <= 400) {
